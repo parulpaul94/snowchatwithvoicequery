@@ -6,4 +6,5 @@ matplotlib
 plotly_express
 scikit-learn
 sounddevice
-portaudio portaudio-devel
+portaudio-devel
+portaudio19-dev
