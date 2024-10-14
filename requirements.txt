@@ -1,7 +1,7 @@
 streamlit
 snowflake-connector-python
 sqlalchemy
-openai
+openai==0.27.6
 matplotlib
 plotly_express
 scikit-learn
