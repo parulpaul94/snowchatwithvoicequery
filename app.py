@@ -88,28 +88,28 @@ class SnowflakeDB:
 def query(_conn, query_text):
     try:
         result = pd.read_sql(query_text, _conn)
-<<<<<<< HEAD
-        # st.success("Query executed successfully.")
-=======
         st.success("Query executed successfully.")
->>>>>>> origin/main
         return result
     except Exception as e:
         st.error(f"Error in query execution: {e}")
+        print("Query Error:", e)  # Log error details
         return None
 
 @st.cache_data
 def ask(prompt):
     gpt = OpenAIService()
     try:
+        print("Sending prompt to OpenAI:", prompt)  # Log the prompt being sent
         response = gpt.prompt(prompt)
-        if response:
+        print("OpenAI Response:", response)  # Log the full response for inspection
+        if response and "choices" in response and len(response["choices"]) > 0:
             return response["choices"][0]["message"]["content"]
         else:
             st.error("No response from OpenAI.")
             return None
     except Exception as e:
         st.error(f"Error querying OpenAI: {e}")
+        print("OpenAI Query Error:", e)  # Log error details
         return None
 
 def get_tables_schema(_conn):
@@ -172,7 +172,7 @@ def main():
             api_key = st.text_input("OpenAI API Key", type="password")
             if api_key:
                 os.environ["OPENAI_API_KEY"] = api_key
-                # st.success("OpenAI API Key entered successfully.")
+                st.success("OpenAI API Key entered successfully.")
                 st.session_state.openai_key_entered = True
 
         if api_key or st.session_state.openai_key_entered:
@@ -201,13 +201,16 @@ def main():
     if question:
         st.title("Snowflake-Streamlit Integration")
         st.write("Connect to your Snowflake database and ask questions about your data in real-time.")
-        
+
         table_schemas = get_tables_schema(sf.conn)
 
         prompt = read_prompt_file("sql_prompt.txt")
         prompt = prompt.replace("<<TABLES>>", table_schemas)
         prompt = prompt.replace("<<QUESTION>>", question)
 
+        # Debug: Display the constructed prompt
+        # st.write("Constructed Prompt:")
+        # st.code(prompt)
 
         answer = ask(prompt)
 
@@ -217,6 +220,7 @@ def main():
 
         answer = answer.replace("```sql", "").replace("```", "").strip()
 
+        # Debug: Print the SQL query before execution
         st.write("Generated SQL Query:")
         st.code(answer)
 
@@ -224,9 +228,9 @@ def main():
         if not is_valid:
             st.error(f"Operation not allowed: {keyword} is restricted!")
             st.stop()
-        
+
         df = query(sf.conn, answer)
-        
+
         if df is not None:
             st.write("Query Result")
             if not df.empty:
@@ -238,18 +242,13 @@ def main():
 
         python_question = st.text_input("Ask a question about the result", placeholder="e.g. Visualize the data")
         if python_question:
-            df_info = str(df.head())  
+            df_info = str(df.head())
 
-            prompt = read_prompt_file("python_prompt.txt")
-            prompt = prompt.replace("<<DATAFRAME>>", df_info)
-            prompt = prompt.replace("<<QUESTION>>", python_question)
-            code_answer = ask(prompt).replace("```python", "").replace("```", "").strip()
-            with st.expander("View generated code"):
-                st.code(code_answer)
-            try:
-                exec(code_answer)
-            except Exception as e:
-                st.error(f"Error executing code: {e}")
+            prompt2 = f"Answer this question based on the data: '{python_question}' using the following information: {df_info}"
+            response2 = ask(prompt2)
+            st.write("Response:")
+            st.write(response2)
 
 if __name__ == "__main__":
     main()
+
