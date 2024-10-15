@@ -65,7 +65,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # Function to read the prompt file content
 def read_prompt_file(fname):
     with open(fname, "r", encoding='utf-8') as f:
@@ -88,17 +87,26 @@ class SnowflakeDB:
 @st.cache_data
 def query(_conn, query_text):
     try:
-        return pd.read_sql(query_text, _conn)
+        result = pd.read_sql(query_text, _conn)
+        st.success("Query executed successfully.")
+        return result
     except Exception as e:
-        st.warning("Error in query")
-        st.error(e)
+        st.error(f"Error in query execution: {e}")
         return None
 
 @st.cache_data
 def ask(prompt):
     gpt = OpenAIService()
-    response = gpt.prompt(prompt)
-    return response["choices"][0]["message"]["content"] if response else None
+    try:
+        response = gpt.prompt(prompt)
+        if response:
+            return response["choices"][0]["message"]["content"]
+        else:
+            st.error("No response from OpenAI.")
+            return None
+    except Exception as e:
+        st.error(f"Error querying OpenAI: {e}")
+        return None
 
 def get_tables_schema(_conn):
     with st.expander("View tables schema in database"):
@@ -196,6 +204,7 @@ def main():
         prompt = prompt.replace("<<TABLES>>", table_schemas)
         prompt = prompt.replace("<<QUESTION>>", question)
 
+
         answer = ask(prompt)
 
         if answer is None:
@@ -233,8 +242,10 @@ def main():
             code_answer = ask(prompt).replace("```python", "").replace("```", "").strip()
             with st.expander("View generated code"):
                 st.code(code_answer)
-            exec(code_answer)
+            try:
+                exec(code_answer)
+            except Exception as e:
+                st.error(f"Error executing code: {e}")
 
 if __name__ == "__main__":
     main()
-
