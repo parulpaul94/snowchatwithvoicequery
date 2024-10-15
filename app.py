@@ -160,7 +160,6 @@ def main():
             api_key = st.text_input("OpenAI API Key", type="password")
             if api_key:
                 os.environ["OPENAI_API_KEY"] = api_key
-                st.success("OpenAI API Key entered successfully.")
                 st.session_state.openai_key_entered = True
 
         if api_key or st.session_state.openai_key_entered:
