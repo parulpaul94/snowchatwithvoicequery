@@ -88,7 +88,11 @@ class SnowflakeDB:
 def query(_conn, query_text):
     try:
         result = pd.read_sql(query_text, _conn)
+<<<<<<< HEAD
         # st.success("Query executed successfully.")
+=======
+        st.success("Query executed successfully.")
+>>>>>>> origin/main
         return result
     except Exception as e:
         st.error(f"Error in query execution: {e}")
